@@ -3,14 +3,16 @@
 An implementation of the machine learning decision tree classification algorithm.
 
 
-Features:
+
+# Features:
 
 1. Has tolerance for categorical features
 
 2. Parameters for limiting the depth, number of leaves and minimum number of training examples in a node are available and can be tuned to achieve optimal bias-variance tradeoff.
 
 
-How to use:
+
+# How to use:
 
 Step I: Clone the repository
 
