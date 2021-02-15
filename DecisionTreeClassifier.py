@@ -114,8 +114,10 @@ class DecisionNode:
         curr_right_child_labels = None
         curr_right_child_gini_impurity = None
         done = {}
-        thresholds = sorted(list(copy.deepcopy(self.__data[feature])))
+        thresholds = list(copy.deepcopy(self.__data[feature]))
         feature_type_imposed_limit = 0 if type(thresholds[0]) is numpy.str_ or type(thresholds[0]) is str else 1
+        if feature_type_imposed_limit:
+          thresholds = sorted(thresholds)
         for index in range(len(thresholds) - feature_type_imposed_limit):
           if feature_type_imposed_limit:
             value = (thresholds[index] + thresholds[index+1])/2
