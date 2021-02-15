@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy
 import matplotlib.pyplot as plt
+import copy
 
 class Question:
 
@@ -113,13 +114,13 @@ class DecisionNode:
         curr_right_child_labels = None
         curr_right_child_gini_impurity = None
         done = {}
-        indexes = list(self.__data.index)
-        feature_type_imposed_limit = 0 if type(self.__data[feature][indexes[0]]) is numpy.str_ or type(self.__data[feature][indexes[0]]) is str else 1
-        for index in range(len(indexes) - feature_type_imposed_limit):
+        thresholds = sorted(list(copy.deepcopy(self.__data[feature])))
+        feature_type_imposed_limit = 0 if type(thresholds[0]) is numpy.str_ or type(thresholds[0]) is str else 1
+        for index in range(len(thresholds) - feature_type_imposed_limit):
           if feature_type_imposed_limit:
-            value = (self.__data[feature][indexes[index]] + self.__data[feature][indexes[index+1]])/2
+            value = (thresholds[index] + thresholds[index+1])/2
           else:
-            value = self.__data[feature][indexes[index]] 
+            value = thresholds[index]
           if value in done:
             continue
           curr_question = Question(feature_type_imposed_limit, feature, value)
@@ -168,17 +169,15 @@ class DecisionTreeClassifier:
 
   def fit(self, train_data, train_labels, cross_validation_data, cross_validation_labels):
 
-    train_labels = pd.DataFrame(train_labels, columns = ['Label'])
+    train_labels = pd.DataFrame(copy.deepcopy(list(train_labels)), columns = ['Label'])
     train_labels.index = train_data.index
-    cross_validation_labels = pd.DataFrame(list(cross_validation_labels), columns = ['Label'])
+    cross_validation_labels = pd.DataFrame(copy.deepcopy(list(cross_validation_labels)), columns = ['Label'])
     cross_validation_labels.index = cross_validation_data.index
     self.__root = DecisionNode(train_data, train_labels, self.__max_depth, self.__max_leaves, self.__min_child_weight)
     self.train(self.__root, train_data, train_labels, cross_validation_data, cross_validation_labels, [[self.evaluate_loss(train_data, train_labels), self.evaluate_accuracy(train_data, train_labels)]], [[self.evaluate_loss(cross_validation_data, cross_validation_labels), self.evaluate_accuracy(cross_validation_data, cross_validation_labels)]])
 
   def train(self, decision_node, train_data, train_labels, cross_validation_data, cross_validation_labels, loss_training = [], loss_cross_validation = [], is_first = True):
 
-    if decision_node == None:
-      return
     decision_node.get_best_split()
     if decision_node.get_question() is not None or is_first:
       loss_training.append([self.evaluate_loss(train_data, train_labels), self.evaluate_accuracy(train_data, train_labels)])
@@ -200,8 +199,8 @@ class DecisionTreeClassifier:
       print("Loss on cross validation set: %.6f" %loss_cross_validation[-1][0])
       print("Accuracy on training set: %.6f" %loss_training[-1][1])
       print("Accuracy on cross validation set: %.6f" %loss_cross_validation[-1][1], end ='\n\n')
-    self.train(decision_node.go_left(), train_data, train_labels, cross_validation_data, cross_validation_labels, loss_training, loss_cross_validation, False)
-    self.train(decision_node.go_right(), train_data, train_labels, cross_validation_data, cross_validation_labels, loss_training, loss_cross_validation, False)
+      self.train(decision_node.go_left(), train_data, train_labels, cross_validation_data, cross_validation_labels, loss_training, loss_cross_validation, False)
+      self.train(decision_node.go_right(), train_data, train_labels, cross_validation_data, cross_validation_labels, loss_training, loss_cross_validation, False)
 
   def predict(self, data):
 
@@ -225,7 +224,7 @@ class DecisionTreeClassifier:
   
   def evaluate_loss(self, data, data_labels):
 
-    data_labels = pd.DataFrame(data_labels, columns = ['Label'])
+    data_labels = pd.DataFrame(copy.deepcopy(data_labels), columns = ['Label'])
     data_labels.index = data.index
     data_labels = list(data_labels.sort_index()['Label'])
     probability_predictions = list(self.predict(data)['Prediction'])
@@ -234,7 +233,7 @@ class DecisionTreeClassifier:
 
   def evaluate_accuracy(self, data, data_labels):
 
-    data_labels = pd.DataFrame(data_labels, columns = ['Label'])
+    data_labels = pd.DataFrame(copy.deepcopy(data_labels), columns = ['Label'])
     data_labels.index = data.index
     data_labels = list(data_labels.sort_index()['Label'])
     probability_predictions = list(self.predict(data)['Prediction'])
